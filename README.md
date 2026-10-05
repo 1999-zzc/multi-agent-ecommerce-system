@@ -38,7 +38,7 @@ Vector/Hot/Rule 多路召回                  本地政策 RAG
 3. `SubsidyDecisionAgent`：检索补贴政策，判断地区适用性，返回最多 4 个补贴方案。
 4. `InventoryAgent`：统一校验普通商品和补贴商品的库存，生成预警和限购策略。
 
-库存检查由 `InventoryAgent` 统一完成。项目只删除了 `MarketingCopyAgent`。
+库存检查由 `InventoryAgent` 统一完成。
 
 ## 补贴 RAG
 
@@ -200,10 +200,6 @@ ECOM_REDIS_URL
 ECOM_MILVUS_URI
 ```
 
-项目不会自动创建 MySQL `products` 表，也不会自动写入商品数据。Milvus 商品索引需要先通过 `python/scripts/build_product_index.py` 离线构建。
-
-如使用 Docker Compose，需要先在项目根目录设置真实的环境变量：
-
 ```bash
 export MYSQL_ROOT_PASSWORD='replace_with_a_local_password'
 export ECOM_LLM_API_KEY='replace_with_llm_key'
@@ -211,7 +207,7 @@ export ECOM_QWEN_API_KEY='replace_with_qwen_key'
 docker compose up --build
 ```
 
-不要把真实 `.env` 文件或 API key 提交到 GitHub。
+
 
 ## 验证
 
@@ -220,4 +216,3 @@ python tests/test_recommendation_core.py
 python tests/test_ab_test.py
 ```
 
-更多面试和历史实验资料位于 [`docs/`](docs/) 与 [`experiments/`](experiments/)；其中旧基准报告描述的是改造前架构，不能直接当作当前补贴链路的实测结果。
