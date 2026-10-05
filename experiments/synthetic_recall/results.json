@@ -1,0 +1,97 @@
+{
+  "status": "EXECUTED_SYNTHETIC_COMPONENT_EXPERIMENT_NOT_MODEL_BENCHMARK",
+  "seed": 20260929,
+  "products": 2000,
+  "users": 200,
+  "positive_interactions": 1000,
+  "split_counts": [
+    800,
+    100,
+    100
+  ],
+  "test_users": 100,
+  "test_samples": 100,
+  "positives_per_sample": 1,
+  "candidates_per_sample": 100,
+  "route_limit": 30,
+  "synthetic_hash_vector_coordinates": 1024,
+  "llm_executed": false,
+  "qwen_executed": false,
+  "milvus_executed": false,
+  "mysql_executed": false,
+  "redis_executed": false,
+  "behavior_log_10000_generated": false,
+  "validation_used_for_tuning": false,
+  "project_source_sha256": {
+    "python/agents/product_rec_agent.py": "5c47291aa659a3bd0514f270ac85525ad27aa7268d2923ff29fe91535e72f5b4",
+    "python/services/recommendation_evaluator.py": "420c36a4b110d35504679926990549b3415315c3cc0e57fa9d9f3012fcbf984f"
+  },
+  "metrics": {
+    "Popular proxy": {
+      "recall@10": 0.13,
+      "hits@10": 13,
+      "recall@20": 0.21,
+      "hits@20": 21,
+      "ndcg@10": 0.05176108824005415,
+      "mrr@10": 0.02856349206349206
+    },
+    "Rule proxy": {
+      "recall@10": 0.25,
+      "hits@10": 25,
+      "recall@20": 0.32,
+      "hits@20": 32,
+      "ndcg@10": 0.12601022905380238,
+      "mrr@10": 0.08894444444444444
+    },
+    "Vector proxy": {
+      "recall@10": 0.2,
+      "hits@10": 20,
+      "recall@20": 0.32,
+      "hits@20": 32,
+      "ndcg@10": 0.08486106333715743,
+      "mrr@10": 0.05038095238095238
+    },
+    "Weighted Fusion component": {
+      "recall@10": 0.19,
+      "hits@10": 19,
+      "recall@20": 0.36,
+      "hits@20": 36,
+      "ndcg@10": 0.07600351442959097,
+      "mrr@10": 0.042055555555555554
+    },
+    "Fusion then random sort": {
+      "recall@10": 0.13,
+      "hits@10": 13,
+      "recall@20": 0.28,
+      "hits@20": 28,
+      "ndcg@10": 0.04874649665890572,
+      "mrr@10": 0.025984126984126985
+    },
+    "Fusion then project rule rerank": {
+      "recall@10": 0.16,
+      "hits@10": 16,
+      "recall@20": 0.34,
+      "hits@20": 34,
+      "ndcg@10": 0.06774594708095841,
+      "mrr@10": 0.03997222222222222
+    }
+  },
+  "fusion_vs_vector": {
+    "recall@10": {
+      "absolute_delta": -0.010000000000000009,
+      "relative_change_percent": -5.000000000000004,
+      "paired_bootstrap_95_percent_interval": [
+        -0.07,
+        0.05
+      ]
+    },
+    "recall@20": {
+      "absolute_delta": 0.03999999999999998,
+      "relative_change_percent": 12.5,
+      "paired_bootstrap_95_percent_interval": [
+        -0.02,
+        0.1
+      ]
+    }
+  }
+}

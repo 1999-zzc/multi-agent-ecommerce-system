@@ -1,0 +1,50 @@
+{
+  "updated_at": "2026-10-05",
+  "policies": [
+    {
+      "policy_id": "national_digital_2026",
+      "policy_name": "2026年数码和智能产品购新补贴",
+      "regions": ["全国"],
+      "categories": ["手机", "平板", "智能手表", "智能手环", "智能眼镜", "穿戴"],
+      "campaign_tags": ["国补", "政府补贴"],
+      "required_product_tags": [],
+      "subsidy_rate": 0.15,
+      "max_subsidy": 500.0,
+      "max_product_price": 6000.0,
+      "effective_from": "2026-01-01",
+      "effective_to": "2026-12-31",
+      "rule_summary": "单件售价不超过6000元，按最终销售价格的15%补贴，每件最高500元，每人每类限补1件。",
+      "source": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202512/t20251230_1402851.html"
+    },
+    {
+      "policy_id": "national_appliance_2026",
+      "policy_name": "2026年一级能效家电以旧换新补贴",
+      "regions": ["全国"],
+      "categories": ["冰箱", "洗衣机", "电视", "空调", "电脑", "热水器"],
+      "campaign_tags": ["国补", "政府补贴"],
+      "required_product_tags": ["一级能效", "一级水效"],
+      "subsidy_rate": 0.15,
+      "max_subsidy": 1500.0,
+      "max_product_price": null,
+      "effective_from": "2026-01-01",
+      "effective_to": "2026-12-31",
+      "rule_summary": "一级能效或水效产品按最终销售价格的15%补贴，每件最高1500元，每人每类限补1件。",
+      "source": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202512/t20251230_1402851.html"
+    },
+    {
+      "policy_id": "hubei_smart_products_2026_10",
+      "policy_name": "湖北省2026年智能产品消费补贴",
+      "regions": ["湖北省", "湖北", "武汉市", "武汉"],
+      "categories": ["扫地机器人", "服务机器人", "耳机", "智能门锁", "智能厨电", "油烟机", "智能马桶", "数码相机", "运动相机", "无人机", "适老化产品", "智能家居"],
+      "campaign_tags": ["湖北补贴", "地方补贴"],
+      "required_product_tags": [],
+      "subsidy_rate": 0.15,
+      "max_subsidy": 1500.0,
+      "max_product_price": null,
+      "effective_from": "2026-10-01",
+      "effective_to": "2026-12-31",
+      "rule_summary": "湖北省扩围智能产品按最终销售价格的15%补贴，每件最高1500元；须在当地参与活动的商家购买，实际执行以当地平台和剩余额度为准。",
+      "source": "https://swt.hubei.gov.cn/zfxxgk/zc/qtzdgkwj/202609/t20260930_6026747.shtml"
+    }
+  ]
+}
