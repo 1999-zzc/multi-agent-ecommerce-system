@@ -45,7 +45,7 @@ ProductRecAgent   SubsidyDecisionAgent
 
 ### ProductRecAgent
 
-从真实 `products` 表读取商品详情，组合三路召回：
+从真实 products 表读取商品详情，组合三路召回：
 
 1. `VectorRecall`：Qwen Embedding + Milvus；
 2. `HotRecall`：热度、库存和新品规则；
@@ -89,7 +89,6 @@ LLM 读取 `context` 中的 `province`、`city` 或 `region`，判断地方政�
 | Milvus | 商品向量和语义召回，只返回商品 ID |
 | 本地 JSON RAG | 国家和地方补贴政策知识片段 |
 
-项目不创建数据库、不写入模拟商品。`ProductRepository` 只声明和查询真实的 `products` 表。
 
 ## 5. FastAPI 响应
 
