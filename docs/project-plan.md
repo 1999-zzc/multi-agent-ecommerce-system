@@ -110,4 +110,4 @@ python tests/test_recommendation_core.py
 python tests/test_ab_test.py
 ```
 
-没有真实用户流量时，不把离线指标写成线上 CTR、CVR 或 GMV 提升；性能和推荐效果数字也必须在固定环境实际测量后再写入简历。
+
