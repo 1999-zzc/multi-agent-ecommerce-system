@@ -1,7 +1,5 @@
 """Reproducible synthetic ranking experiment; no databases or model APIs."""
-
 from __future__ import annotations
-
 import ast
 from collections import Counter
 from dataclasses import asdict, dataclass
@@ -12,7 +10,6 @@ from pathlib import Path
 import random
 import runpy
 import statistics
-
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(__file__).resolve().parent
@@ -76,14 +73,12 @@ def build_dataset():
                                 round(math.exp(rng.uniform(math.log(50), math.log(8000))), 2),
                                 tags, f"S{rng.randrange(100):03d}", rng.randint(1, 500)))
         appeal[pid] = min(rng.paretovariate(1.6), 20.0)
-
     events = []
     for index in range(200):
         uid = f"U{index + 1:03d}"
         categories = rng.sample([f"C{i:02d}" for i in range(20)], 2)
         styles = set(rng.sample([f"style_{i}" for i in range(12)], 2))
         budget = math.exp(rng.uniform(math.log(100), math.log(6000)))
-        # Hidden preferences generate interactions; rankers only see training events.
         weights = [math.exp(
             2.0 * (p.category == categories[0]) + 1.0 * (p.category == categories[1])
             + 0.6 * len(styles.intersection(p.tags))
@@ -131,7 +126,6 @@ def main():
     assert len(train) == 800 and len(validation) == len(test) == 100
     assert max(e["day"] for e in train) < min(e["day"] for e in validation)
     assert max(e["day"] for e in validation) < min(e["day"] for e in test)
-
     histories = {f"U{i + 1:03d}": [] for i in range(200)}
     counts = Counter(event["product_id"] for event in train)
     for event in train:
@@ -139,7 +133,6 @@ def main():
     for product in products:
         product.score = float(counts[product.product_id])
     vectors = {p.product_id: embed(p) for p in products}
-
     names = ["Popular proxy", "Rule proxy", "Vector proxy", "Weighted Fusion component",
              "Fusion then random sort", "Fusion then project rule rerank"]
     samples = {name: [] for name in names}
@@ -155,15 +148,12 @@ def main():
         rng.shuffle(ids)
         assert len(set(ids)) == 100 and positive in ids and not seen.intersection(ids)
         candidates = [catalog[pid] for pid in ids]
-
         profile = Counter()
         for product in history:
             profile.update(vectors[product.product_id])
         profile = normalize(profile)
         categories = Counter(p.category for p in history)
         budget = statistics.median(p.price for p in history)
-
-        # Each proxy sees the same candidates and pre-cutoff history, never the label.
         vector = sorted(candidates, key=lambda p: sum(
             value * profile.get(coordinate, 0.0) for coordinate, value in vectors[p.product_id].items()
         ), reverse=True)[:30]
@@ -185,7 +175,6 @@ def main():
             rankings[name] = ranked_ids
         details.append({"user_id": uid, "day": event["day"], "positive_id": positive,
                         "candidate_ids": ids, "rankings": rankings})
-
     metrics = {name: mean_metrics(rows, evaluator) for name, rows in samples.items()}
     vector = metrics["Vector proxy"]
     fusion = metrics["Weighted Fusion component"]
@@ -199,7 +188,6 @@ def main():
                             "relative_change_percent": (fusion[key] / vector[key] - 1) * 100
                             if vector[key] else None,
                             "paired_bootstrap_95_percent_interval": paired_bootstrap(deltas)}
-
     fingerprints = {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
                     for path in [ROOT / "python/agents/product_rec_agent.py",
                                  ROOT / "python/services/recommendation_evaluator.py"]}
@@ -219,7 +207,6 @@ def main():
         ensure_ascii=False, indent=2), encoding="utf-8")
     (OUT / "rankings.json").write_text(json.dumps(details, ensure_ascii=False, indent=2), encoding="utf-8")
     (OUT / "results.json").write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
-
     lines = ["# 合成数据离线评测：实际执行结果", "",
              "本报告由 run.py 自动生成。这是合成数据、模拟召回通道的组件实验，不是 Qwen、Milvus 或 LLM 的实测。", "",
              f"固定种子：{SEED}。商品 2,000，用户 200，合成正反馈 1,000；按时间划分 800/100/100。",
@@ -251,7 +238,5 @@ def main():
               "- dataset.json 保留商品和时间切分交互，rankings.json 保留每条候选、标签及排名，results.json 保留未舍入指标与源文件哈希。", ""]
     (OUT / "report.md").write_text("\n".join(lines), encoding="utf-8")
     print(json.dumps(results, ensure_ascii=False, indent=2))
-
-
 if __name__ == "__main__":
     main()

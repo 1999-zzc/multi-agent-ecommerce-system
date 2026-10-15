@@ -1,14 +1,10 @@
 """推荐链路核心逻辑测试，不依赖真实 Redis、数据库、Milvus 或 LLM。"""
-
 from __future__ import annotations
-
 import asyncio
 import os
 import sys
 
-# 将 python/ 目录加入模块搜索路径，支持直接运行本文件。
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 from agents.base_agent import BaseAgent
 from agents.inventory_agent import InventoryAgent
 from agents.product_rec_agent import ProductRecAgent
@@ -23,7 +19,6 @@ class SlowAgent(BaseAgent):
     """用于验证 BaseAgent 是否会强制取消超时协程的测试 Agent。"""
 
     def __init__(self):
-        # 只重试一次，避免测试因指数退避等待过久。
         super().__init__(name="slow", timeout=0.01, max_retries=1)
 
     async def _execute(self, **kwargs) -> AgentResult:
@@ -64,6 +59,7 @@ def test_base_agent_returns_failure_after_timeout():
 
 def test_feature_store_records_behavior_and_protects_system_fields():
     """行为记录应写入 Redis，同时 metadata 不得覆盖真实商品 ID 和时间戳。"""
+
     async def scenario():
         store = FeatureStore(redis_client=FakeRedis())
         await store.record_behavior(
@@ -76,13 +72,11 @@ def test_feature_store_records_behavior_and_protects_system_fields():
         assert events[0]["item_id"] == "P001"
         assert events[0]["ts"] > 0
         assert events[0]["amount"] == 7999
-
     asyncio.run(scenario())
 
 
 def test_profile_default_fallback_is_a_valid_profile():
     """结构化输出失败时，画像 Agent 的默认画像应可供下游推荐继续使用。"""
-    # 不初始化 LLM 客户端，直接测试纯粹的默认画像构造逻辑。
     agent = object.__new__(UserProfileAgent)
     profile = agent._default_profile("U001")
     assert profile.user_id == "U001"
@@ -95,8 +89,6 @@ def test_multi_recall_fusion_removes_duplicate_products():
     product_a = Product(product_id="P001", name="A", category="手机", price=1000)
     product_b = Product(product_id="P002", name="B", category="耳机", price=500)
     product_c = Product(product_id="P003", name="C", category="配件", price=100)
-
-    # _merge_candidates 不依赖实例状态，因此用未初始化对象即可测试纯融合逻辑。
     agent = object.__new__(ProductRecAgent)
     merged = agent._merge_candidates(
         ([product_a, product_b], 0.6),
@@ -126,7 +118,6 @@ def test_online_metrics_link_exposure_to_conversion():
     assert metrics.record_recommendation_event("R001", "U001", "click", "P001")
     assert metrics.record_recommendation_event("R001", "U001", "purchase", "P001", 7999)
     assert metrics.record_recommendation_event("R001", "U001", "click", "P999") is None
-
     funnel = metrics.get_business_stats()["funnel"]
     assert funnel == {
         "exposure_count": 2,
@@ -146,13 +137,9 @@ def test_offline_ranking_metrics():
     assert recall_at_k(recommended, relevant, 2) == 0.5
     assert 0 < ndcg_at_k(recommended, relevant, 3) < 1
     assert mrr(recommended, relevant) == 0.5
-
     result = evaluate_rankings([(recommended, relevant)], k=2)
     assert result["recall@2"] == 0.5
-
-
 if __name__ == "__main__":
-    # 允许不安装 pytest，直接运行本文件也能完成基础验证。
     test_base_agent_returns_failure_after_timeout()
     test_feature_store_records_behavior_and_protects_system_fields()
     test_profile_default_fallback_is_a_valid_profile()

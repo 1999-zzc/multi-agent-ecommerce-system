@@ -1,33 +1,17 @@
 """补贴决策 Agent：政策 RAG + 地区判断 + 补贴商品排序。"""
-
 from __future__ import annotations
-
-# json 用来把请求上下文、政策片段和候选方案传给 LLM。
 import json
-
-# Any 用于 BaseAgent 的动态入参和内部方案字典。
 from typing import Any
-
-# LangChain 消息对象负责组装结构化 LLM 请求。
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-
-# Pydantic 约束 LLM 只能返回方案 ID 列表。
 from pydantic import BaseModel, Field, field_validator
-
-# 项目配置、业务模型和支撑服务。
 from config import get_settings
 from models.schemas import Product, SubsidizedProduct, SubsidyDecisionResult
 from services.product_repository import ProductRepository
 from services.subsidy_rag import SubsidyRAG
-
-# BaseAgent 提供统一超时、重试、日志和失败兜底。
 from .base_agent import BaseAgent
 
-# MySQL products.tags 命中任意一个标记后，商品才进入补贴候选集。
 DISCOUNT_TAGS = ["国补", "政府补贴", "地方补贴", "补贴", "折扣"]
-
-# LLM 只做地区适用性判断和方案选择，价格与补贴金额都由代码计算。
 SYSTEM_PROMPT = """你是电商补贴合规决策助手。
 
 请结合用户上下文中的省、市或地区，判断候选补贴方案能否在用户所在地使用：
@@ -41,7 +25,6 @@ SYSTEM_PROMPT = """你是电商补贴合规决策助手。
 
 class SubsidyLLMOutput(BaseModel):
     """LLM 的最小结构化输出。"""
-
     selected_plan_ids: list[str] = Field(default_factory=list)
 
     @field_validator("selected_plan_ids")
@@ -64,8 +47,6 @@ class SubsidyDecisionAgent(BaseAgent):
             name="subsidy_decision",
             timeout=settings.agent_timeout_subsidy_decision,
         )
-
-        # 复用项目现有的 OpenAI 兼容模型配置。
         self.llm = ChatOpenAI(
             api_key=settings.llm_api_key,
             base_url=settings.llm_base_url,
@@ -74,17 +55,12 @@ class SubsidyDecisionAgent(BaseAgent):
             max_tokens=512,
         )
         self.structured_llm = self.llm.with_structured_output(SubsidyLLMOutput)
-
-        # Repository 查 MySQL，RAG 查本地政策知识库。
         self.product_repository = product_repository or ProductRepository()
         self.subsidy_rag = subsidy_rag or SubsidyRAG()
 
     async def _execute(self, **kwargs: Any) -> SubsidyDecisionResult:
-        # context 可包含 province/city/region，由 LLM 判断地方政策是否适用。
         context: dict[str, Any] = kwargs.get("context", {})
         limit: int = max(1, min(int(kwargs.get("limit", 4)), 4))
-
-        # 第一步：从 MySQL 查询带补贴或折扣标签的在线有货商品。
         products = await self.product_repository.list_discount_products(
             DISCOUNT_TAGS,
             limit=50,
@@ -95,8 +71,6 @@ class SubsidyDecisionAgent(BaseAgent):
                 data={"candidate_count": 0, "reason": "no_discount_tagged_products"},
                 confidence=1.0,
             )
-
-        # 第二步：从政策知识库召回与商品类目、地区上下文相关的政策片段。
         policies = self.subsidy_rag.retrieve(products, context)
         plans = self._build_plans(products, policies)
         self._score_plans(plans)
@@ -107,8 +81,6 @@ class SubsidyDecisionAgent(BaseAgent):
                 data={"candidate_count": len(products), "reason": "no_policy_match"},
                 confidence=1.0,
             )
-
-        # 第三步：把检索到的政策和已算好的方案分数交给 LLM 做地区判断。
         prompt = {
             "user_context": context,
             "policies": policies,
@@ -122,8 +94,6 @@ class SubsidyDecisionAgent(BaseAgent):
                 HumanMessage(content=json.dumps(prompt, ensure_ascii=False)),
             ]
         )
-
-        # 第四步：只接受真实存在、地区可验证且商品不重复的方案。
         plan_map = {plan["plan_id"]: plan for plan in plans}
         selected: list[dict[str, Any]] = []
         used_product_ids: set[str] = set()
@@ -135,8 +105,6 @@ class SubsidyDecisionAgent(BaseAgent):
                 continue
             selected.append(plan)
             used_product_ids.add(plan["product_id"])
-
-        # 模型少返回了合法方案时，按同一综合分规则补齐，保证有足够候选时返回 4 个。
         for plan in sorted(
             plans,
             key=lambda item: item["composite_score"],
@@ -150,11 +118,8 @@ class SubsidyDecisionAgent(BaseAgent):
                 continue
             selected.append(plan)
             used_product_ids.add(plan["product_id"])
-
-        # 最终仍按确定性的 0.5/0.5 综合分排序，防止模型把顺序返回错。
         selected.sort(key=lambda plan: plan["composite_score"], reverse=True)
         selected = selected[:limit]
-
         return SubsidyDecisionResult(
             success=True,
             products=[self._to_subsidized_product(plan) for plan in selected],
@@ -184,8 +149,6 @@ class SubsidyDecisionAgent(BaseAgent):
             for policy in policies:
                 if not any(category in product_text for category in policy["categories"]):
                     continue
-
-                # “折扣”标签只能让商品进入候选池；真正套用政策还必须命中政策活动标签。
                 campaign_tags = policy.get("campaign_tags", [])
                 if campaign_tags and not any(
                     campaign_tag in product_tag
@@ -193,15 +156,12 @@ class SubsidyDecisionAgent(BaseAgent):
                     for product_tag in product.tags
                 ):
                     continue
-
                 required_tags = policy.get("required_product_tags", [])
                 if required_tags and not any(tag in product.tags for tag in required_tags):
                     continue
-
                 max_price = policy.get("max_product_price")
                 if max_price is not None and product.price > max_price:
                     continue
-
                 subsidy_amount = min(
                     product.price * policy["subsidy_rate"],
                     policy["max_subsidy"],
@@ -227,12 +187,10 @@ class SubsidyDecisionAgent(BaseAgent):
         """计算低补贴后价格分、优惠金额分及各占 0.5 的综合分。"""
         if not plans:
             return
-
         prices = [plan["subsidized_price"] for plan in plans]
         discounts = [plan["subsidy_amount"] for plan in plans]
         min_price, max_price = min(prices), max(prices)
         min_discount, max_discount = min(discounts), max(discounts)
-
         for plan in plans:
             price_score = (
                 1.0
