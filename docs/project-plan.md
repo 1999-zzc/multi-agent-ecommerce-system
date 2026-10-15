@@ -89,10 +89,6 @@ ECOM_REDIS_URL
 ECOM_MILVUS_URI
 ```
 
-项目不会自动启动 MySQL、Redis 或 Milvus。部署时应先准备真实服务和商品表，再构建 Milvus 索引，最后启动 FastAPI。
-
-补贴政策会变化，本项目的 JSON 是学习和演示用快照。正式系统应增加政策同步、版本管理、审核和结算时二次校验。
-
 ## 6. 验证计划
 
 当前已有：
